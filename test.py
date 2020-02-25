@@ -102,12 +102,11 @@ def to_Next_State_Prob(action,currState,error,nextState):
 #if the robot choose to move(action is not (0,0))
     #First, current state is on one of the 4 corners
     if(checkcornerAndObsta(currState)): 
-        #if current state + action is greater than boundary 
+        #if current state + action is greater than boundary, 
         if(exceedBound(currState, action) and currState.col==nextState.col and currState.row == nextState.row):
                return 1-error+error/2
-        else:
-            if(currState.col==nextState.col and currState.row == nextState.row):
-               return error/2
+
+    
     #Second,current state is not on the corner of the gridworld
     if((currState.row+action.row)==nextState.row 
         and (currState.col+action.col)==nextState.col):
@@ -137,11 +136,12 @@ def checkcorner(currState):
 
 #helper function to check if the currentState + action exceed the regular bound of the frame
 def exceedBound(currState, action):
-    if(currState.row+action.row<0 or currState.row+action.row> ROW_NUM
-         or currState.col+action.col<0 or currState.col+action.col>COL_NUM):   
+    if(currState.row+action.row<0 or currState.row+action.row> (ROW_NUM-1)
+         or currState.col+action.col<0 or currState.col+action.col> (COL_NUM - 1)):   
         return True
     else:       
         return False 
+ 
 
 ###############################################################################
 #2a)  incorporate the displayed obstacles, edit 1C
@@ -167,8 +167,8 @@ def checkcornerAndObsta(currState):
 ###############################################################################
 #2b) returns the reward r(s) given input s
 ###############################################################################
-def getStateReward(s):
-    return s.reward
+#def getStateReward(s):
+#    return s.reward
 
 #######################################################
 #this class is used for generate the gridWorld
@@ -184,8 +184,8 @@ class gridWorld:
         self.state_space=stateSpace(ROW_NUM,COL_NUM)
         self.policy_matrix= self.policyMatrix()
         self.initialize_value_matrix()
-    def return_value(self,oneSate):
-        return self.value_matrix[oneState.row][oneState.col];
+    def return_value(self,state):
+        return self.value_matrix[state.row][state.col];
     
     def return_policy(self,oneState):
         return self.policy_matrix[oneState.row][oneState.col]
@@ -238,9 +238,9 @@ class gridWorld:
                     a = self.policy_matrix[state.row][state.col]
                     self.value_matrix[i][j] = self.getSum(state, a, gamma)
                     #abs_value = abs(value-self.value_matrix[i][j])
-                    
-                    #temp = max(temp, abs(value-self.value_matrix[i][j]))                   
-
+ 
+                    #temp = max(temp, abs(value-self.value_matrix[i][j]))
+ 
     def getSum(self, s, a, gamma):
         sum1 = 0
         for i in range(ROW_NUM):
@@ -254,10 +254,10 @@ class gridWorld:
                 v_fn = self.value_matrix[i][j]
                 #print(v_fn)
                 reward = self.state_space.getStateReward(i,j)
-                #print(reward)  
+                #print(reward)
                 sum1 = sum1 + t_fn*(reward + gamma*v_fn)
                 if (sum1 > 100):
-                	sum1 = sum1/100
+                        sum1 = sum1/100
         print(sum1)
         return sum1
 
@@ -272,24 +272,23 @@ class gridWorld:
     def getMaxPolicy(self, gamma):  
         g = gamma
         isOpt = True
-        for col in range (0, COL_NUM):
-            for row in range (0, ROW_NUM):
-               #self.display_policy_matrix()
-               Vprev = -1000
-               prevAction = self.policy_matrix[row][col]    #left->
-               state = self.state_space.state2Darray[row][col]  #
-               optAction = -1
-               for action in range(0, ACT_SPACE):
-                                    
-                   Vnext = self.getSum(state, action, g)                
+        for row in range (ROW_NUM):
+            for col in range (COL_NUM):
+               self.display_policy_matrix()
+               Vprev = -10000
+               prevAction = self.policy_matrix[row][col]    # left
+               state = self.state_space.state2Darray[row][col]  # 0,1
+               optAction = None
+               for action in range(0, ACT_SPACE):                       
+                   Vnext = self.getSum(state, action, g)     #0.05           
                    if Vnext > Vprev:
                        optAction = action
                        Vprev = Vnext
-                   
+                       print(optAction, Vnext)               
                if optAction != prevAction:
                    isOpt = False
                self.policy_matrix[row][col] = optAction
-        #self.display_policy_matrix()
+        self.display_policy_matrix()
         return isOpt
            
 ###############################################################################
@@ -303,9 +302,7 @@ class gridWorld:
         while(stop == False):
         #for i in range(10):
             self.evaluatePolicy( self.policy_matrix, gamma)
-            world.display_value_matrix()
             stop = self.getMaxPolicy(gamma)
-            world.display_policy_matrix()	
         end_time = time.time()
         print('Optimal policy took ' + str(end_time - st_time) + ' seconds to finish.\n')
 
@@ -314,35 +311,31 @@ class gridWorld:
  #     Output: The trajectory as an array of a sequence of actions
  #################################################################################
     def plot_trajectory(self, col, row, discount):
-        trajectory, reward, realTrajectory, reward2 = self.getTrajectoryAndReward(col,row,discount)
+        trajectory, reward = getTrajectoryAndReward(col,row,discount)
         #prints trajectory as an array of numbers 0-5, and reward
         #will plot trajectory via other program like excel
         print("trajectory", trajectory, " Reward: ", reward)
-        print("Real trajectory", realTrajectory, " Reward2: ", reward2)
-    
-    #as the function name suggested, it will get a trajectory of ideal robot movement case where the
-    #probability of error is 0. It will also get a trajectory of real-world robot movement where the
-    #probability of error is user-defined. Both trajectory will output the discounted sum of reward.
+
     def getTrajectoryAndReward(self, col, row, discount):
         self.col_num = col
         self.row_num = row
-        trajectory = []
-        realTrajectory = []
+        trajectory = [None]
+        realTrajectory = [None]
         step = step2 = 0
         reward = reward2 = 0
         #if the action is not_move, then we are at our goal
         #otherwise, keep iterating through policies
-        action = self.policy_matrix[self.row_num][self.col_num]
-        realAction = self.policy_matrix[self.row_num][self.col_num]
+        action = self.policy_matrix[self.col_num][self.row_num]
+        realAction = self.policy_matrix[self.col_num][self.row_num]
         #calculate an ideal trajectory
         while action != 0:      
             #append the action to the trajectory
-            action = self.policy_matrix[self.row_num][self.col_num]
-            trajectory.append(action)
+            action = self.policy_matrix[self.col_num][self.row_num]
+            trajectory.append()
             #update discounted reward
-            reward += discount**step * self.state_space.getStateReward(self.row_num,self.col_num)
+            reward += discount**step * self.state_space[self.col][self.row].getStateReward()
             #update the position of state space using the action
-            self.updateState(action)
+            updateState(action)
             step += 1
         #bring state back to initial for second calculation
         self.col_num = col
@@ -350,17 +343,16 @@ class gridWorld:
         #calculate a non ideal trajectory
         while realAction != 0:      
             #append the action to the trajectory
-            realAction = self.policy_matrix[self.row_num][self.col_num]
+            realAction = self.policy_matrix[self.col_num][self.row_num]
             realAction = self.getRealAction(realAction, self.error)
             realTrajectory.append(realAction)
             #update discounted reward
-            reward2 += discount**step2 * self.state_space.state2Darray[row][col].reward
+            reward2 += discount**step * self.state_space[self.col][self.row].getStateReward()
             #update the position of state space using the action
-            self.updateState(realAction)
+            updateState(realAction)
             step2 += 1
         return trajectory, reward, realTrajectory, reward2 
-    #updates state based off of action given
-    #make sure that if robot is moving into a wall or obstacle, it is staying at its current place        
+    #updates state based off of action given        
     def updateState(self, action):
         if action == 1: #left
             if self.col_num == 0:
@@ -390,7 +382,6 @@ class gridWorld:
                 self.row_num = self.row_num
             else:
                 self.row_num -= 1
-    #use random generator to simulate the robot movement in the real world with provided Probability of error
     def getRealAction(self, action, perror):
         temp = 1 - perror + perror/4
         temp2 = 10000*temp - 1
@@ -426,7 +417,7 @@ class gridWorld:
 ######################################################
 # Initialize state space                             #
 ######################################################
-perror = 0.10 #probability error
+perror = 0.01 #probability error
 gamma = 0.9 #discount
 #list of coordinates where obstacles will exist
 obstacles = [(3,1),(3,2),(1,1),(1,2)]
@@ -446,14 +437,16 @@ world.state_space.printAll()
 #grid.
 #testing probability checking
 #works good
-state = oneState(4,2,0)
-state2 = oneState(3,2,0)
+state = oneState(0,1,0)
+state2 = oneState(0,2,0)
 prb = [0] * ACT_SPACE
+
 
 for i in range(0,ACT_SPACE):
     action = robotAction(i)
-    prb[i] = to_Next_State_Prob(action, state, 0.4, state2)
+    prb[i] = to_Next_State_Prob(action, state, world.error, state2)
 print(prb)
+
 
 #3b testing populating matrices and displaying
 #GOOD
@@ -461,12 +454,14 @@ print(prb)
 
 #3c calculate value matrix test
 #MAYBE GOOOD
-#world.evaluatePolicy(world.policy_matrix, gamma)
-#world.display_value_matrix()
+world.evaluatePolicy(world.policy_matrix, gamma)
+world.display_value_matrix()
 
-#3d && #3e
+#printing return_value
+#for i in range(ROW_NUM):
+#    for j in range(COL_NUM):
+#        print(world.return_value(world.state_space.state2Darray[i][j]))
+
+#3d
 world.policyIteration(gamma)
-#world.display_policy_matrix()
-
-#3g
-world.plot_trajectory( 2, 5, 0.9)
+world.display_policy_matrix()
