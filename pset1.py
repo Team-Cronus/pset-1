@@ -445,7 +445,7 @@ class gridWorld:
 ######################################################
 # Initialize world                                   #
 ######################################################
-perror = 0.40 #probability error
+perror = 0.01 #probability error
 gamma = 0.9 #discount
 #list of coordinates where obstacles will exist
 obstacles = [(3,1),(3,2),(1,1),(1,2)]
@@ -511,7 +511,7 @@ world.plot_trajectory(2,5,gamma)
 print("\nEVALUATING OPTIMAL POLICIES FOR WORLDS WITH NEW ERROR AND DISCOUNT VALUES")
 
 gamma2 = 0.9
-perror2 = 0.0001
+perror2 = 0.2
 print("\nPolicy with discount = ",gamma2,", perror = ",perror2)
 world2 = gridWorld(COL_NUM,ROW_NUM,perror2)
 for r in rewards:
@@ -519,8 +519,8 @@ for r in rewards:
 world2.policyIteration(gamma2)
 world2.display_policy_matrix(world2.policy_matrix)
 
-gamma3 = 0.4
-perror3 = 0.0001
+gamma3 = 0.9
+perror3 = 0.4
 print("\nPolicy with discount = ",gamma3,", perror = ",perror3)
 world3 = gridWorld(COL_NUM,ROW_NUM,perror3)
 for r in rewards:
