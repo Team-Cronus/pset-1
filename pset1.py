@@ -213,7 +213,7 @@ class gridWorld:
 ###############################################################################
 #3b) a function to display any input policy π, and use it to display π0.
 ###############################################################################
-    def display_policy_matrix(pmat):
+    def display_policy_matrix(self, pmat):
        for i in range(ROW_NUM-1,-1,-1):
             print("")
             for j in range(COL_NUM):
@@ -503,5 +503,5 @@ world.plot_trajectory( 2, 5, 0.9)
 #reseting policy matrix back to all LEFT
 world.policy_matrix = world.policyMatrix()
 world.value_iteration(gamma)
-world.display_policy_matrix()
+world.display_policy_matrix(world.policy_matrix)
 world.plot_trajectory(2,5,gamma)
