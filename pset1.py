@@ -258,7 +258,7 @@ class gridWorld:
                 sum1 = sum1 + t_fn*(reward + gamma*v_fn)
                 if (sum1 > 100):
                 	sum1 = sum1/100
-        print(sum1)
+        #print(sum1)
         return sum1
 
 ###############################################################################
@@ -354,7 +354,7 @@ class gridWorld:
             realAction = self.getRealAction(realAction, self.error)
             realTrajectory.append(realAction)
             #update discounted reward
-            reward2 += discount**step2 * self.state_space.state2Darray[row][col].reward
+            reward2 += discount**step2 * self.state_space.getStateReward(self.row_num,self.col_num)
             #update the position of state space using the action
             self.updateState(realAction)
             step2 += 1
