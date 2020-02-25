@@ -200,6 +200,7 @@ class gridWorld:
             print("")
             for j in range(COL_NUM):
                 print(f'{self.value_matrix[i][j]:.3f}',end=" ")
+        print("")
 ###############################################################################
 #3a) Create and populate a matrix/array that contains the actions
 ###############################################################################
@@ -229,9 +230,7 @@ class gridWorld:
         for x in range(1):
             temp = 0
             for i in range(ROW_NUM):
-              #  print("here1")
                 for j in range(COL_NUM):
-               #     print("here2")
                     state = self.state_space.state2Darray[i][j]
                     #value = self.return_value(state)
                     value = self.value_matrix[i][j]
@@ -244,21 +243,15 @@ class gridWorld:
     def getSum(self, s, a, gamma):
         sum1 = 0
         for i in range(ROW_NUM):
-            #print("here3")
             for j in range (COL_NUM):
-             #   print("here4")
                 s_prime = self.state_space.state2Darray[i][j]
                 New_a = robotAction(a)
                 t_fn = to_Next_State_Prob(New_a, s, self.error, s_prime)
-                #v_fn = self.return_value(s_prime)
                 v_fn = self.value_matrix[i][j]
-                #print(v_fn)
-                reward = self.state_space.getStateReward(i,j)
-                #print(reward)  
+                reward = self.state_space.getStateReward(i,j) 
                 sum1 = sum1 + t_fn*(reward + gamma*v_fn)
                 if (sum1 > 100):
                 	sum1 = sum1/100
-        #print(sum1)
         return sum1
 
 ###############################################################################
@@ -280,7 +273,6 @@ class gridWorld:
                state = self.state_space.state2Darray[row][col]  #
                optAction = -1
                for action in range(0, ACT_SPACE):
-                                    
                    Vnext = self.getSum(state, action, g)                
                    if Vnext > Vprev:
                        optAction = action
@@ -451,7 +443,7 @@ class gridWorld:
 ######################################################
 
 ######################################################
-# Initialize state space                             #
+# Initialize world                                   #
 ######################################################
 perror = 0.40 #probability error
 gamma = 0.9 #discount
@@ -467,12 +459,14 @@ rewards = [(5,4,-100),(4,4,-100),(3,4,-100),(2,4,-100),(1,4,-100),(0,4,-100),(2,
            (0,2,10)]
 for r in rewards:
     world.state_space.setStateReward(r[0],r[1],r[2])
+#printing the board
+print("PRINTING THE GRID WORLD")
+print("Policy with discount = ",gamma,", perror = ",perror)
 world.state_space.printAll()
 
 
 #grid.
 #testing probability checking
-#works good
 state = oneState(4,2,0)
 state2 = oneState(3,2,0)
 prb = [0] * ACT_SPACE
@@ -483,25 +477,54 @@ for i in range(0,ACT_SPACE):
 print(prb)
 
 #3b testing populating matrices and displaying
-#GOOD
-#world.display_policy_matrix()
+print("PRINTING INITIAL POLICY MATRIX")
+world.display_policy_matrix(world.policy_matrix)
 
 #3c calculate value matrix test
-#MAYBE GOOOD
-#world.evaluatePolicy(world.policy_matrix, gamma)
-#world.display_value_matrix()
+print("Evaluating the initial policy")
+world.evaluatePolicy(world.policy_matrix, gamma)
+world.display_value_matrix()
 
 #3d && #3e
+print("COMPUTING OPTIMAL POLICY VIA POLICY ITERATION")
 world.policyIteration(gamma)
 #world.display_policy_matrix()
 
 #3g
+print("PRINTING AN ARRAY THAT SHOWS THE MOVEMENTS OF BOTH AN IDEAL TRAJECTORY\n",
+      "AND ONE THAT IS NON-IDEAL AND ACCOUNTS FOR ERROR IN MOVEMENT, ALSO\n",
+      "DISPLAYS DISCOUNTED REWARD FOR IDEAL TRAJECTORY AND\n",
+      "DISCOUNTED SUM OF REWARDS FOR EXPECTED TRAJECTORY")
 world.plot_trajectory( 2, 5, 0.9)
 
 
 #4a,4b,4c evaluating value iteration
 #reseting policy matrix back to all LEFT
+print("\nCOMPUTING OPTIMAL POLICY VIA VALUE ITERATION AND DISPLAYING IS TRAJECTORY")
 world.policy_matrix = world.policyMatrix()
 world.value_iteration(gamma)
 world.display_policy_matrix(world.policy_matrix)
 world.plot_trajectory(2,5,gamma)
+
+
+#5a setting up a new world to evaluate
+print("\nEVALUATING OPTIMAL POLICIES FOR WORLDS WITH NEW ERROR AND DISCOUNT VALUES")
+
+gamma2 = 0.9
+perror2 = 0.0001
+print("\nPolicy with discount = ",gamma2,", perror = ",perror2)
+world2 = gridWorld(COL_NUM,ROW_NUM,perror2)
+for r in rewards:
+    world2.state_space.setStateReward(r[0],r[1],r[2])
+world2.policyIteration(gamma2)
+world2.display_policy_matrix(world2.policy_matrix)
+
+gamma3 = 0.4
+perror3 = 0.0001
+print("\nPolicy with discount = ",gamma3,", perror = ",perror3)
+world3 = gridWorld(COL_NUM,ROW_NUM,perror3)
+for r in rewards:
+    world3.state_space.setStateReward(r[0],r[1],r[2])
+world3.policyIteration(gamma3)
+world3.display_policy_matrix(world3.policy_matrix)
+
