@@ -213,11 +213,11 @@ class gridWorld:
 ###############################################################################
 #3b) a function to display any input policy π, and use it to display π0.
 ###############################################################################
-    def display_policy_matrix(self):
+    def display_policy_matrix(pmat):
        for i in range(ROW_NUM-1,-1,-1):
             print("")
             for j in range(COL_NUM):
-                print(f'{self.policy_matrix[i][j]:.3f}',end=" ")
+                print(f'{pmat[i][j]:.3f}',end=" ")
        print("")
 ###############################################################################
 #3c) a function to compute the policy evaluation of a policy π.
@@ -303,9 +303,9 @@ class gridWorld:
         while(stop == False):
         #for i in range(10):
             self.evaluatePolicy( self.policy_matrix, gamma)
-            world.display_value_matrix()
+            #world.display_value_matrix(self.policy_matrix)
             stop = self.getMaxPolicy(gamma)
-            world.display_policy_matrix()	
+            #world.display_policy_matrix(self.policy_matrix)	
         end_time = time.time()
         print('Optimal policy took ' + str(end_time - st_time) + ' seconds to finish.\n')
 
@@ -416,6 +416,33 @@ class gridWorld:
                     return action_temp
 
 
+###########################################################################
+#4a) compute value iteration, again returning
+# optimal policy π∗ with optimal valueV ∗.
+###########################################################################
+    def value_iteration(self, gamma):
+        begin = time.time()
+        self.initialize_value_matrix()
+        delta = 0.2      
+        while(delta >= 0.1):
+            delta = 0
+            for i in range(ROW_NUM):
+                 for j in range(COL_NUM):
+                     value = self.value_matrix[i][j]
+                     curr_state = self.state_space.state2Darray[i][j]
+                     vprev = -1000
+                     optAct = 0
+                     for action in range(ACT_SPACE):     
+                          vnext = self.getSum(curr_state,action,gamma)
+                          if(vnext > vprev):
+                              vprev=vnext
+                              optAct = action
+                     self.value_matrix[i][j] = vprev
+                     self.policy_matrix[i][j] =optAct
+                     delta = max(delta,abs(value - vprev))   
+        end = time.time()
+        timedelta = end-begin
+        print('time for value-iteration: ', timedelta)
 
 
 
@@ -426,7 +453,7 @@ class gridWorld:
 ######################################################
 # Initialize state space                             #
 ######################################################
-perror = 0.10 #probability error
+perror = 0.40 #probability error
 gamma = 0.9 #discount
 #list of coordinates where obstacles will exist
 obstacles = [(3,1),(3,2),(1,1),(1,2)]
@@ -470,3 +497,11 @@ world.policyIteration(gamma)
 
 #3g
 world.plot_trajectory( 2, 5, 0.9)
+
+
+#4a,4b,4c evaluating value iteration
+#reseting policy matrix back to all LEFT
+world.policy_matrix = world.policyMatrix()
+world.value_iteration(gamma)
+world.display_policy_matrix()
+world.plot_trajectory(2,5,gamma)
