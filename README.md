@@ -101,7 +101,7 @@ a computation time of 2.26 seconds. In terms of the results, they are the exact 
 
 Probelm 5
 For problem 5, we explore different policies using different values of discount factors and errors.
-We change the error probability from 0.001 to 0.01 to 0.2 and 0.4. In our program we noticed that the policy changes
+We change the error probability from 0.01 to 0.2 and 0.4. In our program we noticed that the policy changes
 depending on those two factors. For the higher probability error settings, the optimal policy will
 change from a safer route which is to go left and avoid the negative reward areas and then going down to its
 goal. If we were to have an error with very small probability than the optimal policy
